@@ -1,0 +1,66 @@
+-- Zharft Fly Script
+local UIS = game:GetService("UserInputService")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local root = character:WaitForChild("HumanoidRootPart")
+local fly = false
+local speed = 50
+local dir = Vector3.zero
+local bv, bg
+
+-- GUI
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+gui.Name = "ZharftFly"
+local btn = Instance.new("TextButton", gui)
+btn.Size = UDim2.new(0, 100, 0, 40)
+btn.Position = UDim2.new(0, 10, 0, 10)
+btn.Text = "Fly / Unfly"
+btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+btn.TextColor3 = Color3.new(1,1,1)
+local lbl = Instance.new("TextLabel", gui)
+lbl.Size = UDim2.new(0, 100, 0, 20)
+lbl.Position = UDim2.new(0, 10, 0, 55)
+lbl.Text = "Zharft"
+lbl.BackgroundTransparency = 1
+lbl.TextColor3 = Color3.new(1,1,1)
+
+UIS.InputBegan:Connect(function(i, g)
+    if g then return end
+    if i.KeyCode == Enum.KeyCode.W then dir = Vector3.new(0,0,-1)
+    elseif i.KeyCode == Enum.KeyCode.S then dir = Vector3.new(0,0,1)
+    elseif i.KeyCode == Enum.KeyCode.A then dir = Vector3.new(-1,0,0)
+    elseif i.KeyCode == Enum.KeyCode.D then dir = Vector3.new(1,0,0)
+    end
+end)
+
+UIS.InputEnded:Connect(function(i)
+    if i.KeyCode == Enum.KeyCode.W or i.KeyCode == Enum.KeyCode.S or
+       i.KeyCode == Enum.KeyCode.A or i.KeyCode == Enum.KeyCode.D then
+        dir = Vector3.zero
+    end
+end)
+
+btn.MouseButton1Click:Connect(function()
+    if not fly then
+        fly = true
+        bg = Instance.new("BodyGyro", root)
+        bg.P = 9e4
+        bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+        bv = Instance.new("BodyVelocity", root)
+        bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+        RunService:BindToRenderStep("ZharftFlyStep", Enum.RenderPriority.Character.Value, function()
+            if fly then
+                local cam = workspace.CurrentCamera
+                bg.CFrame = cam.CFrame
+                bv.Velocity = cam.CFrame:VectorToWorldSpace(dir) * speed
+            end
+        end)
+    else
+        fly = false
+        if bg then bg:Destroy() end
+        if bv then bv:Destroy() end
+        RunService:UnbindFromRenderStep("ZharftFlyStep")
+    end
+end)
