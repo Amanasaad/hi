@@ -1,0 +1,98 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local player = Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+local root = character:WaitForChild("HumanoidRootPart")
+
+local fly = false
+local speed = 50
+local bv, bg
+
+-- Key system GUI
+local screenGui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+screenGui.Name = "ZharftKeyGUI"
+screenGui.ResetOnSpawn = false
+
+local keyBox = Instance.new("TextBox", screenGui)
+keyBox.Size = UDim2.new(0, 200, 0, 40)
+keyBox.Position = UDim2.new(0.5, -100, 0.5, -60)
+keyBox.PlaceholderText = "Enter key to unlock"
+keyBox.Text = ""
+keyBox.TextScaled = true
+keyBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+keyBox.TextColor3 = Color3.new(1, 1, 1)
+
+local submitBtn = Instance.new("TextButton", screenGui)
+submitBtn.Size = UDim2.new(0, 100, 0, 40)
+submitBtn.Position = UDim2.new(0.5, -50, 0.5, 0)
+submitBtn.Text = "Submit"
+submitBtn.TextScaled = true
+submitBtn.BackgroundColor3 = Color3.fromRGB(70, 70, 70)
+submitBtn.TextColor3 = Color3.new(1, 1, 1)
+
+-- Fly GUI creator
+local function createFlyGUI()
+	local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+	gui.Name = "ZharftFlyGUI"
+	gui.ResetOnSpawn = false
+
+	local btn = Instance.new("TextButton", gui)
+	btn.Size = UDim2.new(0, 120, 0, 40)
+	btn.Position = UDim2.new(0, 10, 0, 10)
+	btn.Text = "Fly / Unfly"
+	btn.TextScaled = true
+	btn.BackgroundColor3 = Color3.fromRGB(35,35,35)
+	btn.TextColor3 = Color3.new(1,1,1)
+
+	local lbl = Instance.new("TextLabel", gui)
+	lbl.Size = UDim2.new(0, 120, 0, 20)
+	lbl.Position = UDim2.new(0, 10, 0, 55)
+	lbl.Text = "Zharft"
+	lbl.TextScaled = true
+	lbl.BackgroundTransparency = 1
+	lbl.TextColor3 = Color3.fromRGB(255,255,255)
+
+	btn.MouseButton1Click:Connect(function()
+		if not fly then
+			fly = true
+			humanoid.PlatformStand = true -- disables normal physics and allows flying
+			bg = Instance.new("BodyGyro", root)
+			bg.P = 9e4
+			bg.MaxTorque = Vector3.new(9e9,9e9,9e9)
+			bv = Instance.new("BodyVelocity", root)
+			bv.MaxForce = Vector3.new(9e9,9e9,9e9)
+
+			RunService:BindToRenderStep("ZharftFlyStep", Enum.RenderPriority.Character.Value, function()
+				if fly then
+					local cam = workspace.CurrentCamera
+					bg.CFrame = cam.CFrame
+
+					-- Use Humanoid.MoveDirection for mobile and PC movement input
+					local moveVector = humanoid.MoveDirection * speed
+					-- Keep vertical velocity stable (no gravity)
+					moveVector = Vector3.new(moveVector.X, 0, moveVector.Z)
+					bv.Velocity = moveVector + Vector3.new(0, 0, 0)
+				end
+			end)
+		else
+			fly = false
+			humanoid.PlatformStand = false -- restore normal physics
+			if bg then bg:Destroy() end
+			if bv then bv:Destroy() end
+			RunService:UnbindFromRenderStep("ZharftFlyStep")
+		end
+	end)
+end
+
+-- Key check
+submitBtn.MouseButton1Click:Connect(function()
+	if keyBox.Text:lower() == "hi" then
+		screenGui:Destroy()
+		createFlyGUI()
+	else
+		keyBox.Text = ""
+		keyBox.PlaceholderText = "Wrong key. Try again."
+	end
+end)
