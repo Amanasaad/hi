@@ -1,0 +1,111 @@
+--// UI Setup
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+local uis = game:GetService("UserInputService")
+
+-- Create ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "SpeedJumpUI"
+screenGui.ResetOnSpawn = false
+screenGui.Parent = player:WaitForChild("PlayerGui")
+
+-- Main Frame
+local mainFrame = Instance.new("Frame")
+mainFrame.Size = UDim2.new(0, 300, 0, 200)
+mainFrame.Position = UDim2.new(0.5, -150, 0.5, -100)
+mainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+mainFrame.BorderSizePixel = 0
+mainFrame.Active = true
+mainFrame.Draggable = true
+mainFrame.Parent = screenGui
+
+-- Title
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
+title.Text = "Speed & Jump Power Customizer"
+title.TextColor3 = Color3.new(1, 1, 1)
+title.TextSize = 14
+title.Font = Enum.Font.SourceSansBold
+title.Parent = mainFrame
+
+-- Minimize Button
+local minimizeButton = Instance.new("TextButton")
+minimizeButton.Size = UDim2.new(0, 30, 0, 30)
+minimizeButton.Position = UDim2.new(1, -30, 0, 0)
+minimizeButton.Text = "-"
+minimizeButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+minimizeButton.TextColor3 = Color3.new(1,1,1)
+minimizeButton.Parent = mainFrame
+
+-- Speed Slider
+local speedSlider = Instance.new("TextBox")
+speedSlider.Size = UDim2.new(1, -20, 0, 30)
+speedSlider.Position = UDim2.new(0, 10, 0, 50)
+speedSlider.PlaceholderText = "Enter WalkSpeed (1 - 10000)"
+speedSlider.Text = tostring(humanoid.WalkSpeed)
+speedSlider.TextColor3 = Color3.new(0,0,0)
+speedSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
+speedSlider.ClearTextOnFocus = false
+speedSlider.Parent = mainFrame
+
+-- Jump Power Slider
+local jumpSlider = Instance.new("TextBox")
+jumpSlider.Size = UDim2.new(1, -20, 0, 30)
+jumpSlider.Position = UDim2.new(0, 10, 0, 100)
+jumpSlider.PlaceholderText = "Enter JumpPower (1 - 10000)"
+jumpSlider.Text = tostring(humanoid.JumpPower)
+jumpSlider.TextColor3 = Color3.new(0,0,0)
+jumpSlider.BackgroundColor3 = Color3.fromRGB(255,255,255)
+jumpSlider.ClearTextOnFocus = false
+jumpSlider.Parent = mainFrame
+
+-- Toggle visibility
+local uiVisible = true
+uis.InputBegan:Connect(function(input, gp)
+	if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == Enum.KeyCode.H then
+		local pressed = uis:IsKeyDown(Enum.KeyCode.I)
+		if pressed then
+			uiVisible = not uiVisible
+			mainFrame.Visible = uiVisible
+		end
+	end
+end)
+
+-- Minimize Button Logic
+local minimized = false
+minimizeButton.MouseButton1Click:Connect(function()
+	minimized = not minimized
+	for _, child in ipairs(mainFrame:GetChildren()) do
+		if child ~= title and child ~= minimizeButton then
+			child.Visible = not minimized
+		end
+	end
+end)
+
+-- WalkSpeed update
+speedSlider.FocusLost:Connect(function()
+	local value = tonumber(speedSlider.Text)
+	if value and value >= 1 and value <= 10000 then
+		humanoid.WalkSpeed = value
+	else
+		speedSlider.Text = tostring(humanoid.WalkSpeed)
+	end
+end)
+
+-- JumpPower update
+jumpSlider.FocusLost:Connect(function()
+	local value = tonumber(jumpSlider.Text)
+	if value and value >= 1 and value <= 10000 then
+		humanoid.JumpPower = value
+	else
+		jumpSlider.Text = tostring(humanoid.JumpPower)
+	end
+end)
+
+-- Update on respawn
+player.CharacterAdded:Connect(function(char)
+	humanoid = char:WaitForChild("Humanoid")
+end)
